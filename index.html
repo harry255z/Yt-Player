@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>YouTube Video Player with Resume</title>
+  <style>
+    body {
+      background: #121212;
+      color: white;
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 20px;
+    }
+    iframe {
+      width: 80%;
+      height: 450px;
+      border: none;
+      margin-bottom: 20px;
+      border-radius: 12px;
+    }
+  </style>
+</head>
+<body>
+  <h1>📺 My Videos</h1>
+  <div id="videoContainer"></div>
+
+  <script>
+    // ==== Paste full YouTube links here ====
+    const videoLinks = [
+      "https://youtu.be/5AKXVO-PeX8?si=OxGp2ZVtfVd9g9Lk",
+      "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      "https://m.youtube.com/watch?v=hbj6jmVmwMg&list=PL_A4M5IAkMae_Hntw2myU3dHQ417zcxn6&index=1&pp=iAQB",
+      // add more...
+    ];
+
+    // Function to extract video ID from any YouTube link
+    function extractVideoId(url) {
+      let match = url.match(/(?:youtu\.be\/|v=)([a-zA-Z0-9_-]{11})/);
+      return match ? match[1] : null;
+    }
+
+    let players = {};
+
+    function onYouTubeIframeAPIReady() {
+      videoLinks.forEach((link, index) => {
+        const id = extractVideoId(link);
+        if (!id) return; // skip if invalid
+
+        const div = document.createElement("div");
+        div.id = "player" + index;
+        document.getElementById("videoContainer").appendChild(div);
+
+        players[id] = new YT.Player(div.id, {
+          videoId: id,
+          events: {
+            onReady: (event) => {
+              let savedTime = localStorage.getItem("video-" + id);
+              if (savedTime) {
+                event.target.seekTo(parseFloat(savedTime), true);
+              }
+            },
+            onStateChange: (event) => {
+              if (event.data === YT.PlayerState.PAUSED || event.data === YT.PlayerState.ENDED) {
+                let currentTime = event.target.getCurrentTime();
+                localStorage.setItem("video-" + id, currentTime);
+              }
+            }
+          }
+        });
+      });
+    }
+
+    // Load YouTube Iframe API
+    let tag = document.createElement("script");
+    tag.src = "https://www.youtube.com/iframe_api";
+    document.body.appendChild(tag);
+  </script>
+</body>
+</html>
